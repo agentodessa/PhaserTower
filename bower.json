@@ -1,0 +1,21 @@
+{
+  "name": "CDW",
+  "version": "1.0.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "parse": "~1.6.5",
+    "angular": "~1.4.7",
+    "angular-ui-router": "~0.2.13",
+    "lodash": "~2.4.1",
+    "ngstorage": "~0.3.0",
+    "jquery": "~2.1.4",
+    "q":"~1.4.1",
+    "semantic":"~1.9.3"
+  }
+}
