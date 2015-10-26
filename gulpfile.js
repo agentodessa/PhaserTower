@@ -9,7 +9,8 @@ var gulp = require('gulp'),
 	bower = require('gulp-bower'),
 	jshint = require('gulp-jshint'),
 	stylish = require('jshint-stylish'),
-	ngAnnotate = require('gulp-ng-annotate'),
+	typescript = require('gulp-typescript'),
+	tsd = require('gulp-tsd'),
 //jsdoc = require("gulp-jsdoc"),
 	template = require('gulp-template'),
 	runSequence = require('run-sequence'),
@@ -21,7 +22,12 @@ var gulp = require('gulp'),
 	assetsDir = 'assets/',
 	appDir = 'app/',
 	cssDir = 'css/',
-	configFile = 'config.json';
+	configFile = 'config.json',
+	streamqueue = require('streamqueue'),
+	settings = {
+		componentDir: "bower_components/",
+		configDir: "src/config/"
+	};
 
 gulp.task('bower', ['default'], function () {
 	return bower();
@@ -45,36 +51,43 @@ gulp.task('jscs', function () {
 
 gulp.task('scripts.app', function () {
 	var source = [
-		appDir + '*.js',
-		templateModulesDir + '**/**.js',
-		templateComponentsDir + '**/**.js'
+		'**/*.ts'
 	].map(function (dir) {
 			return appDir + dir;
 		});
+
 	return gulp.src(source)
-		.pipe(concat('app.js'))
-		.pipe(template({
-			templateModulesDir: vendorDir + templateModulesDir,
-			templateComponentsDir: vendorDir + templateComponentsDir
+		.pipe(typescript({
+			target: 'es5',
+			declarationFiles: true,
+			noExternalResolve: false,
+			sortOutput: true
 		}))
-		.pipe(ngAnnotate())
+		.pipe(concat('app.js'))
 		.pipe(gulp.dest(rootDir + vendorDir + 'js/'))
 		.pipe(connect.reload());
+
+
+	//return gulp.src(source)
+	//	.pipe(concat('app.js'))
+	//	.pipe(template({
+	//		templateModulesDir: vendorDir + templateModulesDir,
+	//		templateComponentsDir: vendorDir + templateComponentsDir
+	//	}))
+	//	.pipe(gulp.dest(rootDir + vendorDir + 'js/'))
+
 });
 
 gulp.task('scripts.vendor', function () {
+
+
 	var source = [
-		'parse/parse.js',
-		'angular/angular.js',
-		'lodash/dist/lodash.js',
-		'angular-ui-router/release/angular-ui-router.js',
-		'ngstorage/ngStorage.js',
-		'jquery/dist/jquery.js',
-		'semantic/dist/semantic.js',
-		'q/q.js'
+		'phaser/build/phaser.min.js',
+		'pixi/bin/pixi.min.js'
 	].map(function (dir) {
 			return componentsDir + dir;
 		});
+
 	return gulp.src(source)
 		.pipe(concat('vendor.js'))
 		.pipe(gulp.dest(rootDir + vendorDir + 'js/'))
@@ -145,10 +158,13 @@ gulp.task('config', function () {
 });
 
 gulp.task('watch', ['clean'], function () {
-	gulp.watch(appDir + '**/*.js', ['scripts.app']);
+	gulp.watch('app/**/*.ts', ['scripts.app']);
 	gulp.watch(appDir + assetsDir + cssDir + '*.css', ['css']);
 	gulp.watch('**/*.html', ['templates.direct']);
 	gulp.watch(rootDir + vendorDir + 'index.html', ['templates.direct']);
+});
+gulp.task('tsd', function () {
+	return gulp.src('./gulp_tsd.json').pipe(tsd());
 });
 
 gulp.task('default', function () {
@@ -156,13 +172,13 @@ gulp.task('default', function () {
 });
 
 gulp.task('dev', ['clean'], function () {
-	gulp.start('scripts.app', 'scripts.vendor', 'css','css.vendor',
+	gulp.start('scripts.app', 'scripts.vendor', 'css', 'css.vendor', 'tsd',
 		'templates.direct', 'server', 'watch', 'fonts', 'images', 'config');
 	gutil.log('tasks is completed');
 });
 
 gulp.task('build', ['clean'], function () {
-	gulp.start('scripts.app', 'scripts.vendor', 'css','css.vendor', 'templates.direct', 'fonts', 'images', 'config');
+	gulp.start('scripts.app', 'scripts.vendor', 'css', 'css.vendor', 'tsd', 'templates.direct', 'fonts', 'images', 'config');
 	gutil.log('tasks is completed');
 });
 
